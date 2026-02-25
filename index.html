@@ -13,35 +13,47 @@
             box-sizing: border-box;
         }
 
+        html, body {
+            height: 100%;
+        }
+
         body {
             background: #000;
             color: #fff;
             font-family: 'Arial', sans-serif;
-            min-height: 100vh;
-            max-height: 100vh;
-            overflow: hidden;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
-            padding: 20px;
+            padding: 0;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
 
         .container {
             width: 100%;
             max-width: 600px;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
         }
 
         .screen {
             display: none;
+            flex: 1;
         }
 
         .screen.active {
-            display: block;
+            display: flex;
+            flex-direction: column;
         }
 
         /* MENU SCREEN */
         .menu-screen {
             text-align: center;
+            justify-content: center;
+            align-items: center;
         }
 
         .menu-title {
@@ -87,8 +99,6 @@
 
         /* SETTINGS SCREEN */
         .settings-screen {
-            padding: 20px;
-            max-height: 100vh;
             overflow-y: auto;
         }
 
@@ -191,7 +201,7 @@
 
         /* GAME SCREEN */
         .game-screen {
-            padding: 20px;
+            align-items: center;
         }
 
         .game-header {
@@ -365,10 +375,8 @@
 
         /* SCANNER SCREEN */
         .scanner-screen {
-            padding: 20px;
             text-align: center;
-            max-height: 100vh;
-            overflow: hidden;
+            align-items: center;
         }
 
         .scanner-title {
@@ -379,8 +387,7 @@
 
         .scanner-container {
             margin-bottom: 15px;
-            max-height: 60vh;
-            overflow: hidden;
+            width: 100%;
         }
 
         #scanner {
@@ -416,10 +423,6 @@
         /* PLAYER SCREEN */
         .player-screen {
             text-align: center;
-            padding: 20px;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
         }
