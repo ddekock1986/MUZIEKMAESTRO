@@ -202,6 +202,7 @@
         /* GAME SCREEN */
         .game-screen {
             align-items: center;
+            justify-content: center;
         }
 
         .game-header {
@@ -209,6 +210,7 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
+            width: 100%;
         }
 
         .song-counter {
@@ -434,61 +436,47 @@
             text-shadow: 2px 2px 0px #ED1C24, 4px 4px 0px #0066B3;
         }
 
-        .player-card {
-            width: 100%;
-            max-width: 380px;
-            border: 8px solid white;
-            border-radius: 20px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .player-embed-wrapper {
-            position: relative;
-            width: 100%;
-            height: 352px;
-            overflow: hidden;
-        }
-
-        .player-embed-wrapper iframe {
-            width: 100%;
-            height: 352px;
-            border: none;
-        }
-
-        /* Top overlay to cover the song title/artist in the Spotify embed */
-        .player-title-overlay {
+        /* Hidden iframe container - audio plays but nothing visible */
+        .player-iframe-hidden {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 120px;
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            opacity: 0;
             pointer-events: none;
         }
 
-        .player-title-overlay .mystery-text {
+        /* Visual mystery card shown to player */
+        .player-mystery-card {
+            width: 280px;
+            height: 280px;
+            border: 8px solid white;
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .player-mystery-card .mystery-icon {
+            font-size: 5rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.15); opacity: 1; }
+        }
+
+        .player-mystery-card .mystery-text {
             font-family: Impact, sans-serif;
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             color: #fff;
             text-transform: uppercase;
             letter-spacing: 3px;
-            text-shadow: 0 0 10px rgba(0,0,0,0.8);
-        }
-
-        /* Bottom small overlay to hide Spotify branding only, not the play button */
-        .player-bottom-overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 35px;
-            z-index: 10;
-            display: none;
-            pointer-events: none;
         }
 
         .player-hint {
@@ -500,7 +488,7 @@
         .player-buttons {
             display: flex;
             gap: 15px;
-            margin-top: 20px;
+            margin-top: 25px;
             flex-wrap: wrap;
             justify-content: center;
         }
@@ -764,19 +752,21 @@
             <button class="btn btn-back-scanner" onclick="app.stopScanner()">Terug</button>
         </div>
 
-        <!-- PLAYER SCREEN (shown when opening via QR code) -->
+        <!-- PLAYER SCREEN (shown when scanning QR code) -->
         <div id="playerScreen" class="screen player-screen">
             <div class="player-title">MUZIEK MAESTRO</div>
-            <div class="player-card" id="playerCard">
-                <div class="player-embed-wrapper" id="playerEmbedWrapper">
-                    <!-- Spotify embed iframe inserted here by JS -->
-                    <div class="player-title-overlay" id="playerTitleOverlay">
-                        <span class="mystery-text">Welk nummer is dit?</span>
-                    </div>
-                    <div class="player-bottom-overlay" id="playerBottomOverlay"></div>
-                </div>
+
+            <!-- Hidden iframe: audio plays but player is invisible -->
+            <div class="player-iframe-hidden" id="playerIframeContainer"></div>
+
+            <!-- Visual mystery card -->
+            <div class="player-mystery-card" id="playerMysteryCard">
+                <div class="mystery-icon">&#127925;</div>
+                <span class="mystery-text">Welk nummer is dit?</span>
             </div>
-            <p class="player-hint" id="playerHint">Muziek wordt geladen...</p>
+
+            <p class="player-hint" id="playerHint">Luister en raad het nummer!</p>
+
             <div class="player-buttons">
                 <button class="btn btn-stop-music" id="stopMusicBtn" onclick="app.stopMusic()">Stop Muziek</button>
                 <button class="btn btn-scan-again" onclick="app.scanAgain()">Scan Opnieuw</button>
@@ -24276,91 +24266,67 @@
 
             // ===== PLAYER MODE (opened via QR code) =====
 
-            // Show the embedded player for a Spotify track
+            // Show the embedded player for a Spotify track (iframe hidden, audio plays)
             showPlayer(spotifyId) {
                 this.switchScreen('playerScreen');
 
-                const wrapper = document.getElementById('playerEmbedWrapper');
-                const topOverlay = document.getElementById('playerTitleOverlay');
-                const bottomOverlay = document.getElementById('playerBottomOverlay');
-                const card = document.getElementById('playerCard');
+                const container = document.getElementById('playerIframeContainer');
+                const mysteryCard = document.getElementById('playerMysteryCard');
 
-                // Random Uno color for the card border
+                // Random Uno color for the mystery card
                 const colors = ['#ED1C24', '#0066B3', '#009E60', '#FFCD00'];
                 const color = colors[Math.floor(Math.random() * colors.length)];
-                card.style.borderColor = color;
+                mysteryCard.style.background = color;
+                mysteryCard.style.borderColor = 'white';
 
                 // Remove any existing iframe
-                const existingIframe = wrapper.querySelector('iframe');
-                if (existingIframe) existingIframe.remove();
+                container.innerHTML = '';
 
-                // Create Spotify embed iframe with autoplay
+                // Create hidden Spotify embed iframe with autoplay
                 const iframe = document.createElement('iframe');
                 iframe.src = `https://open.spotify.com/embed/track/${spotifyId}?utm_source=generator&theme=0&autoplay=1`;
-                iframe.width = '100%';
-                iframe.height = '352';
+                iframe.width = '300';
+                iframe.height = '80';
                 iframe.frameBorder = '0';
                 iframe.allow = 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture';
                 iframe.loading = 'eager';
-                iframe.style.borderRadius = '12px';
+                container.appendChild(iframe);
 
-                // Insert iframe before the overlays
-                wrapper.insertBefore(iframe, topOverlay);
-
-                // Style top overlay to hide song title/artist
-                topOverlay.style.display = 'flex';
-                topOverlay.style.background = color;
-                topOverlay.style.borderRadius = '12px 12px 0 0';
-
-                // Small bottom overlay to hide Spotify branding
-                bottomOverlay.style.display = 'block';
-                bottomOverlay.style.background = color;
-                bottomOverlay.style.borderRadius = '0 0 12px 12px';
-                bottomOverlay.style.height = '35px';
-
-                // Update hint and show stop button
+                // Update UI
                 document.getElementById('playerHint').textContent = 'Luister en raad het nummer!';
                 document.getElementById('stopMusicBtn').style.display = 'inline-block';
+                mysteryCard.querySelector('.mystery-icon').textContent = '\u{1F3B5}';
+                mysteryCard.querySelector('.mystery-text').textContent = 'Welk nummer is dit?';
 
-                // Hide the "Open in Spotify" link initially
+                // Show "Open in Spotify" after 10 seconds as fallback
                 const spotifyLink = document.getElementById('playerSpotifyLink');
                 spotifyLink.href = `https://open.spotify.com/track/${spotifyId}`;
                 spotifyLink.style.display = 'none';
                 spotifyLink.textContent = 'Open in Spotify';
-
-                // Show "Open in Spotify" after 8 seconds as fallback
                 setTimeout(() => {
                     spotifyLink.style.display = 'inline-block';
-                }, 8000);
+                }, 10000);
             },
 
             // Show player with a search query (for songs without Spotify ID)
             showPlayerSearch(searchQuery) {
                 this.switchScreen('playerScreen');
 
-                const wrapper = document.getElementById('playerEmbedWrapper');
-                const topOverlay = document.getElementById('playerTitleOverlay');
-                const bottomOverlay = document.getElementById('playerBottomOverlay');
-                const card = document.getElementById('playerCard');
+                const container = document.getElementById('playerIframeContainer');
+                const mysteryCard = document.getElementById('playerMysteryCard');
 
                 const colors = ['#ED1C24', '#0066B3', '#009E60', '#FFCD00'];
                 const color = colors[Math.floor(Math.random() * colors.length)];
-                card.style.borderColor = color;
+                mysteryCard.style.background = color;
+                mysteryCard.style.borderColor = 'white';
 
-                // For search, we can't embed, so show a full-card message
-                const existingIframe = wrapper.querySelector('iframe');
-                if (existingIframe) existingIframe.remove();
+                // No iframe for search - just show the card with a link
+                container.innerHTML = '';
+                mysteryCard.querySelector('.mystery-icon').textContent = '\u{1F50D}';
+                mysteryCard.querySelector('.mystery-text').textContent = 'Niet beschikbaar als embed';
 
-                topOverlay.style.display = 'flex';
-                topOverlay.style.background = color;
-                topOverlay.style.borderRadius = '12px 12px 0 0';
-                topOverlay.style.height = '200px';
-                topOverlay.querySelector('.mystery-text').textContent = 'Nummer niet beschikbaar als embed';
-
-                bottomOverlay.style.display = 'block';
-                bottomOverlay.style.background = color;
-                bottomOverlay.style.borderRadius = '0 0 12px 12px';
-                bottomOverlay.style.height = '152px';
+                document.getElementById('playerHint').textContent = 'Open het nummer in Spotify';
+                document.getElementById('stopMusicBtn').style.display = 'none';
 
                 const spotifyLink = document.getElementById('playerSpotifyLink');
                 spotifyLink.href = `https://open.spotify.com/search/${searchQuery}`;
@@ -24370,8 +24336,8 @@
 
             // Stop music: remove the iframe
             stopMusic() {
-                const wrapper = document.getElementById('playerEmbedWrapper');
-                const iframe = wrapper.querySelector('iframe');
+                const container = document.getElementById('playerIframeContainer');
+                const iframe = container.querySelector('iframe');
                 if (iframe) {
                     iframe.src = '';
                     iframe.remove();
@@ -24382,14 +24348,8 @@
 
             // Go back to scanner to scan another QR code
             scanAgain() {
-                // Stop any playing music
                 this.stopMusic();
-                // Clear hash
                 history.replaceState(null, '', window.location.pathname);
-                // Reset overlay heights for next use
-                document.getElementById('playerTitleOverlay').style.height = '';
-                document.getElementById('playerTitleOverlay').querySelector('.mystery-text').textContent = 'Welk nummer is dit?';
-                // Go to scanner
                 this.goToScanner();
             },
 
